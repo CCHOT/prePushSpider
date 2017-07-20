@@ -57,8 +57,8 @@ ROBOTSTXT_OBEY = True
 #}
 
 DOWNLOADER_MIDDLEWARES = {
-    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
-    'prePushSpider.middlewares.ProxyMiddleware': 100,}
+    'prePushSpider.middlewares.ProxyMiddleware': 100,
+}
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -71,10 +71,6 @@ DOWNLOADER_MIDDLEWARES = {
 #ITEM_PIPELINES = {
 #    'prePushSpider.pipelines.PrepushspiderPipeline': 300,
 #}
-ITEM_PIPELINES = {
-    'prePushSpider.pipelines.UrlItemPipeline':300,
-    'prePushSpider.pipelines.ArticleItemPipeline':800,
-}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html

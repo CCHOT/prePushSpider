@@ -24,5 +24,8 @@ class ArticleItem(scrapy.Item):
 class KanDianArticleItem(scrapy.Item):
     url = scrapy.Field()
     articleId = scrapy.Field()
-    text = scrapy.Field()
+    date = scrapy.Field()
+    author = scrapy.Field()
+    content = scrapy.Field()
     title = scrapy.Field()
+

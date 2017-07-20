@@ -9,7 +9,8 @@ class UrlSpider(scrapy.Spider):
     allowed_domains = ['baidu.com']
 
     def start_requests(self):
-        for article in articles :
+
+        for article in articles:
             logging.debug("spider url:%s" %article["title"])
             yield scrapy.Request("https://www.baidu.com/s?wd=%s" %article["title"],self.parse)
 

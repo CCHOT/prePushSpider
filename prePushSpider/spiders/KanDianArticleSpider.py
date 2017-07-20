@@ -13,25 +13,21 @@ class KanDianArticleSpider(scrapy.Spider):
         }
     }
 
-    articleId = ""
-
     def start_requests(self):
         articleInfo = pd.read_csv('D:\\prePushSpider\\select_test.csv', header=0, sep='\t')
         urls = articleInfo["ContentURL"]
         articleIds = articleInfo["ArticleID"]
-        for url in urls:
-            #self.articleId = articleIds[i]
-            yield scrapy.Request(url,self.parse)
+        for i in xrange(len(urls)):
+            yield scrapy.Request(urls[i],meta={'articleId':articleIds[i]},callback=self.parse)
 
     def parse(self,response):
         sel = scrapy.selector.Selector(response)
         kanDianArticleItem = KanDianArticleItem()
-        #kanDianArticleItem['articleId'] = self.articleId
-        kanDianArticleItem['url'] = str(response.url)
-        kanDianArticleItem['title'] = sel.xpath('//*[@id="activity-name"]/text()').extract()
-        kanDianArticleItem['date'] = sel.xpath('//*[@id="account_top"]/div[2]/em[1]/text()').extract()
-        kanDianArticleItem['author'] = sel.xpath('//*[@id="account_top"]/div[1]/div/text()').extract()
+        kanDianArticleItem['url'] = response.url
+        kanDianArticleItem['title'] = sel.xpath('//*[@id="activity-name"]/text()').extract()[0]
+        kanDianArticleItem['date'] = sel.xpath('//*[@id="account_top"]/div[2]/em[1]/text()').extract()[0]
+        kanDianArticleItem['author'] = sel.xpath('//*[@id="account_top"]/div[1]/div/text()').extract()[0]
         kanDianArticleItem['content'] = sel.xpath('//*[@id="js_content"]').xpath('string(.)').extract()[0]
-        logging("aaaaaaaaaaaaa")
+        kanDianArticleItem['articleId'] = str(response.meta['articleId'])
         yield kanDianArticleItem
 

@@ -14,7 +14,8 @@ class UrlItemPipeline(object):
     def process_item(self, item, spider):
         jsonfile = codecs.open('downloadArticle/%s.json'%item['articleId'],'a',encoding ='utf-8')
         line = json.dumps(dict(item))+'\n'
-        jsonfile.write(line.decode("unicode_escape"))
+        jsonfile.write(line.encode('latin-1').decode('unicode_escape'))       #python3
+        #jsonfile.write(line.decode("unicode_escape"))      #python2
         jsonfile.close()
         return item
 

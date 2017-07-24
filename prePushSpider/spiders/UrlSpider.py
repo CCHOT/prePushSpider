@@ -20,7 +20,8 @@ class UrlSpider(scrapy.Spider):
     }   # 指定urlItem 处理pipeline
 
     def start_requests(self):
-        for line in open("KanDianArticle.json"):
+        for line in open("KanDianArticle.json",encoding='utf-8'):   #python3
+        #for line in open("KanDianArticle.json"):                   #python2
             article = json.loads(line)
             # 构建baidu搜索url，设置callback函数，
             # meta参数是为了能够在request之间进行参数传递，与parse中response.meta对应

@@ -58,4 +58,4 @@ class PrepushspiderSpiderMiddleware(object):
 
 class ProxyMiddleware(object):
     def process_request(self,request,spider):
-        request.meta['proxy'] = "dev-proxy.oa.com:8080"
+        request.meta['proxy'] = "http://dev-proxy.oa.com:8080"

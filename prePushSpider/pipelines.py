@@ -7,24 +7,24 @@
 
 import json
 import codecs
-import logging
+
 
 class UrlItemPipeline(object):
-    def process_item(self, item, spider):
-        return item
 
-
-class ArticleItemPipeline(object):
     def process_item(self, item, spider):
+        jsonfile = codecs.open('downloadArticle/%s.json'%item['articleId'],'a',encoding ='utf-8')
+        line = json.dumps(dict(item))+'\n'
+        jsonfile.write(line.decode("unicode_escape"))
+        jsonfile.close()
         return item
 
 
 class KanDianArticleItemPipeline(object):
+    # 看点文章item处理，保存到json
     def __init__(self):
         self.file = codecs.open('KanDianArticle.json','wb',encoding='utf-8')
 
     def process_item(self,item,spider):
-        logging.debug("______________")
         line = json.dumps(dict(item)) + '\n'
         self.file.write(line.decode("unicode_escape"))
         return item

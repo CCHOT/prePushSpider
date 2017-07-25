@@ -7,15 +7,26 @@
 
 import json
 import codecs
+import datetime
+
+#解决datetime json无法序列化问题
+class CJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime.datetime):
+            return obj.strftime('%Y年%m月%d日 %H:%M:%S')
+        elif isinstance(obj, datetime.date):
+            return obj.strftime('%Y年%m月%d日')
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 
 class UrlItemPipeline(object):
 
     def process_item(self, item, spider):
         jsonfile = codecs.open('downloadArticle/%s.json'%item['articleId'],'a',encoding ='utf-8')
-        line = json.dumps(dict(item))+'\n'
-        jsonfile.write(line.encode('latin-1').decode('unicode_escape'))       #python3
-        #jsonfile.write(line.decode("unicode_escape"))      #python2
+        line = json.dumps(dict(item),cls=CJsonEncoder)+'\n'
+        #jsonfile.write(line.encode('latin-1').decode('unicode_escape'))       #python3
+        jsonfile.write(line.decode("unicode_escape"))      #python2
         jsonfile.close()
         return item
 

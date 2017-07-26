@@ -5,7 +5,6 @@ KanDian filter
 
 ### newspaper
 
-
 1.简单测试，python3与python2差别不大。一般情况下，都无法提取到date，author。可以考虑从百度搜索结果页面取。
 
 2.如需要添加代理，具体在network.get_request_kwargs中添加。参考
@@ -25,7 +24,5 @@ KanDian filter
     
 
 ### 日期提取策略
-
-
 
 1.都是用正则表达式，一个是直接在网页中提取，另外一个是在百度搜索结果摘要中提取。各有优略。

@@ -21,6 +21,7 @@ KanDian filter
 3.如需不下载图片，可进行配置configuration.py
 
     `self.fetch_images = False`
+    
 
 ###日期提取策略
 

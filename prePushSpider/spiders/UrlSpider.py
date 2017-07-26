@@ -43,7 +43,7 @@ class UrlSpider(scrapy.Spider):
                 urlItem['url'] = result.xpath('.//div[@class="f13"]/a/@href').extract()[0]
                 # 通过百度搜索页面摘要获取日期
                 urlItem['date'] = []
-                tt = re.findall(u'^[1-n]+(?:天|小时)[前内]', urlItem['desc'])
+                tt = re.findall(u'^[1-n]+(?:天|小时|分钟)[前内]', urlItem['desc'])
                 for i in tt:
                     sub = re.findall(u'(^[1-n])+天前', i)
                     if not sub:
@@ -98,7 +98,7 @@ class UrlSpider(scrapy.Spider):
         # article = Article(urlItem['url'],language='zh')
         article = Article(url='', language='zh')
         article.set_html(response.text)
-        # article.download()
+        article.download()
         article.parse()
         urlItem['title'] = article.title
         urlItem['content'] = article.text.replace('\n',' ')

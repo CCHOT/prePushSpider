@@ -3,7 +3,8 @@ KanDian filter
 
 # 一些说明：
 
-##newspaper
+### newspaper
+
 
 1.简单测试，python3与python2差别不大。一般情况下，都无法提取到date，author。可以考虑从百度搜索结果页面取。
 
@@ -23,7 +24,8 @@ KanDian filter
     `self.fetch_images = False`
     
 
-##日期提取策略
+### 日期提取策略
+
 
 
 1.都是用正则表达式，一个是直接在网页中提取，另外一个是在百度搜索结果摘要中提取。各有优略。

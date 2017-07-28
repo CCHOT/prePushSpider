@@ -5,7 +5,7 @@ import re
 import logging
 import datetime
 from prePushSpider.items import UrlItem
-from prePushSpider.configure import max_page
+from prePushSpider.configure import *
 from readability import Document
 from newspaper import Article,fulltext
 from goose import Goose
@@ -14,21 +14,24 @@ from goose import Goose
 class UrlSpider(scrapy.Spider):
     name = 'UrlSpider'
     allowed_domains = ['baidu.com']
-    baseUrl = 'www.baidu.com'
     custom_settings = {
         'ITEM_PIPELINES': {
             'prePushSpider.pipelines.UrlItemPipeline': 103
         }
     }   # 指定urlItem 处理pipeline
-
     def start_requests(self):
-        # for line in open("KanDianArticle.json",encoding='utf-8'):     #python3
-        for line in open("KanDianArticle.json"):                        #python2
+        baseUrl = "http://www.baidu.com/s?"
+        # for line in open(KanDianItemFile,encoding='utf-8'):     #python3
+        for line in open(KanDianItemFile):                              #python2
             article = json.loads(line)
-            # 构建baidu搜索url，设置callback函数，
-            # meta参数是为了能够在request之间进行参数传递，与parse中response.meta对应
-            yield scrapy.Request("http://www.baidu.com/s?wd=%s"%article['title'],callback=self.parse,
-                                 meta={'articleId':article['articleId'],'keyword':article['title'],'page':0})
+            if article['title'] == u'deleted':
+                continue
+            keyword = baseUrl+'q1=%s'%article['title']                          # 构建baidu搜索url，添加搜索关键字
+            for i in site_set:
+                queryUrl = keyword+'&q6='+i
+                # meta参数是为了能够在request之间进行参数传递，与parse中response.meta对应
+                yield scrapy.Request(queryUrl, callback=self.parse,
+                                     meta={'articleId': article['articleId'], 'keyword': article['title'],'page': 0})
 
     def parse(self, response):
         sel = scrapy.selector.Selector(response)
@@ -39,7 +42,8 @@ class UrlSpider(scrapy.Spider):
             try:
                 urlItem['keyword'] = response.meta['keyword']
                 urlItem['articleId'] = response.meta['articleId']
-                urlItem['desc'] = result.xpath('.//div[@class="c-abstract"]').xpath('string(.)').extract()[0]
+                urlItem['desc'] = re.sub("[\s+\.\!\/_,\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"),"".decode("utf8"),
+                                         result.xpath('.//div[@class="c-abstract"]').xpath('string(.)').extract()[0])
                 urlItem['url'] = result.xpath('.//div[@class="f13"]/a/@href').extract()[0]
                 # 通过百度搜索页面摘要获取日期
                 urlItem['date'] = []
@@ -65,8 +69,6 @@ class UrlSpider(scrapy.Spider):
                                      meta={'page': page+1,'articleId':urlItem['articleId'],'keyword':urlItem['keyword']})
             except:
                 pass
-        else:
-            pass
 
     def parse_url(self,response):
         urlItem = response.meta['urlItem']
@@ -98,10 +100,12 @@ class UrlSpider(scrapy.Spider):
         # article = Article(urlItem['url'],language='zh')
         article = Article(url='', language='zh')
         article.set_html(response.text)
-        article.download()
+        #article.download()
         article.parse()
-        urlItem['title'] = article.title
-        urlItem['content'] = article.text.replace('\n',' ')
+        urlItem['title'] = re.sub("[\s+\.\!\/_,\\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"),
+                                               "".decode("utf8"), article.title)
+        urlItem['content'] = re.sub("[\s+\.\!\/_,\\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"),
+                                               "".decode("utf8"), article.text)
         urlItem['author'] = article.authors         # 基本提取不到
         # urlItem['date'] = article.publish_date    # 基本提取不到
 

@@ -26,3 +26,6 @@ class KanDianArticleItem(scrapy.Item):
     content = scrapy.Field()        # cms中文章内容
     title = scrapy.Field()          # cms中文章标题
 
+
+class MediaItem(scrapy.Item):
+    url = scrapy.Field()

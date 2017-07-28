@@ -8,6 +8,8 @@
 import json
 import codecs
 import datetime
+import Levenshtein
+from prePushSpider.configure import *
 
 #解决datetime json无法序列化问题
 class CJsonEncoder(json.JSONEncoder):
@@ -24,11 +26,27 @@ class UrlItemPipeline(object):
 
     def process_item(self, item, spider):
         jsonfile = codecs.open('downloadArticle/%s.json'%item['articleId'],'a',encoding ='utf-8')
-        line = json.dumps(dict(item),cls=CJsonEncoder)+'\n'
+        line = json.dumps(dict(item),cls=CJsonEncoder)+ '\n'
+        line = line.decode("unicode_escape")
         #jsonfile.write(line.encode('latin-1').decode('unicode_escape'))       #python3
-        jsonfile.write(line.decode("unicode_escape"))      #python2
+        jsonfile.write(line)      #python2
         jsonfile.close()
         return item
+
+    def close_spider(self,spider):
+        for i in open(KanDianItemFile):
+            article = json.loads(i)
+            if article['title'] == u'deleted':
+                continue
+            sContent = article['content']
+            f = codecs.open('score/%s.json'%article['articleId'],'a',encoding = 'utf-8')
+            for j in open('downloadArticle/%s.json'%article['articleId']):
+                dContent = json.loads(j)
+                score = Levenshtein.jaro(sContent,dContent['content'])
+                line = json.dumps({'url': dContent['url'],
+                                   'score': score})+'\n'
+                f.write(line)
+            f.close()
 
 
 class KanDianArticleItemPipeline(object):
@@ -38,5 +56,22 @@ class KanDianArticleItemPipeline(object):
 
     def process_item(self,item,spider):
         line = json.dumps(dict(item)) + '\n'
-        self.file.write(line.decode("unicode_escape"))
+        line = line.decode("unicode_escape")
+        self.file.write(line)
         return item
+
+    def close_spider(self,spider):
+        self.file.close()
+
+
+class MediaItemPipeline(object):
+    def __init__(self):
+        self.file = codecs.open('url.txt', 'wb', encoding='utf-8')
+
+    def process_item(self,item,spider):
+        self.file.write(item['url']+'\n')
+        return item
+
+    def close_spider(self,spider):
+        self.file.close()
+

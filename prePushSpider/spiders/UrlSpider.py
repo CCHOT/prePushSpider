@@ -2,14 +2,11 @@
 import scrapy
 import json
 import re
-import logging
 import datetime
 from scrapy.utils.response import get_base_url
 from prePushSpider.items import UrlItem
 from prePushSpider.configure import site_search_flag,site_set,max_page,KanDianItemFile
-from readability import Document
-from newspaper import Article,fulltext
-from goose import Goose
+from newspaper import Article
 
 
 class UrlSpider(scrapy.Spider):

@@ -29,5 +29,5 @@ class KanDianArticleItem(scrapy.Item):
 
 
 class MediaItem(scrapy.Item):
-    url = scrapy.Field()
-    name = scrapy.Field()
+    url = scrapy.Field()            # 权威媒体url
+    name = scrapy.Field()           # 全文媒体名称

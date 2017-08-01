@@ -11,7 +11,7 @@ site_filter_flag = True             # 是否启用权威媒体网站过滤
 site_set = set()
 
 # 看点文章list
-KanDianListFile = 'D:\\prePushSpider\\select_test.csv'
+KanDianListFile = 'select_test.csv'
 
 # 看点文章存储中间文件
 KanDianItemFile = 'KanDianArticle.json'

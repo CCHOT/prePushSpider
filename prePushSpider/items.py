@@ -11,6 +11,7 @@ class UrlItem(scrapy.Item):
     articleId = scrapy.Field()      # cms中文章id
     keyword = scrapy.Field()        # 搜索关键字
     url = scrapy.Field()            # 搜索结果url
+    baseUrl = scrapy.Field()        # 搜索结果baseUrl
     desc = scrapy.Field()           # 搜索结果页摘要
     title = scrapy.Field()          # 搜索结果文章标题
     date = scrapy.Field()           # 搜索结果文章时间
@@ -29,3 +30,4 @@ class KanDianArticleItem(scrapy.Item):
 
 class MediaItem(scrapy.Item):
     url = scrapy.Field()
+    name = scrapy.Field()

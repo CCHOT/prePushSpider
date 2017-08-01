@@ -9,7 +9,7 @@ import json
 import codecs
 import datetime
 import Levenshtein
-from prePushSpider.configure import *
+from prePushSpider.configure import KanDianItemFile,site_set,site_filter_flag,site_file
 
 #解决datetime json无法序列化问题
 class CJsonEncoder(json.JSONEncoder):
@@ -42,11 +42,24 @@ class UrlItemPipeline(object):
             f = codecs.open('score/%s.json'%article['articleId'],'a',encoding = 'utf-8')
             for j in open('downloadArticle/%s.json'%article['articleId']):
                 dContent = json.loads(j)
+                if not self.urlFilter(dContent['baseUrl']):
+                    continue
                 score = Levenshtein.jaro(sContent,dContent['content'])
+                if score < 0.5:
+                    continue
                 line = json.dumps({'url': dContent['url'],
                                    'score': score})+'\n'
                 f.write(line)
             f.close()
+
+    def urlFilter(self,url):
+        if site_filter_flag:
+            for site in site_set:
+                if url.find(site) != -1:
+                    return True
+            return False
+        else:
+            return True
 
 
 class KanDianArticleItemPipeline(object):
@@ -66,12 +79,16 @@ class KanDianArticleItemPipeline(object):
 
 class MediaItemPipeline(object):
     def __init__(self):
-        self.file = codecs.open('url.txt', 'wb', encoding='utf-8')
+        self.file = codecs.open(site_file, 'wb', encoding='utf-8')
+        self.count = 0
 
     def process_item(self,item,spider):
-        self.file.write(item['url']+'\n')
+        line = json.dumps(dict(item)) + '\n'
+        line = line.decode("unicode_escape")
+        self.file.write(line)
+        self.count += 1
         return item
 
     def close_spider(self,spider):
         self.file.close()
-
+        print '爬取'+ str(self.count)+'个网址'

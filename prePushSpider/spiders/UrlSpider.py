@@ -4,8 +4,9 @@ import json
 import re
 import logging
 import datetime
+from scrapy.utils.response import get_base_url
 from prePushSpider.items import UrlItem
-from prePushSpider.configure import *
+from prePushSpider.configure import site_search_flag,site_set,max_page,KanDianItemFile
 from readability import Document
 from newspaper import Article,fulltext
 from goose import Goose
@@ -26,12 +27,18 @@ class UrlSpider(scrapy.Spider):
             article = json.loads(line)
             if article['title'] == u'deleted':
                 continue
-            keyword = baseUrl+'q1=%s'%article['title']                          # 构建baidu搜索url，添加搜索关键字
-            for i in site_set:
-                queryUrl = keyword+'&q6='+i
-                # meta参数是为了能够在request之间进行参数传递，与parse中response.meta对应
+            if site_search_flag:
+                keyword = baseUrl+'q1=%s'%article['title']                          # 构建baidu搜索url，添加搜索关键字
+                for i in site_set:
+                    queryUrl = keyword+'&q6='+i
+                    # meta参数是为了能够在request之间进行参数传递，与parse中response.meta对应
+                    yield scrapy.Request(queryUrl, callback=self.parse,
+                                         meta={'articleId': article['articleId'], 'keyword': article['title'],'page': 0})
+            else:
+                queryUrl = baseUrl + 'q1=%s' % article['title']
                 yield scrapy.Request(queryUrl, callback=self.parse,
-                                     meta={'articleId': article['articleId'], 'keyword': article['title'],'page': 0})
+                                     meta={'articleId': article['articleId'], 'keyword': article['title'], 'page': 0})
+
 
     def parse(self, response):
         sel = scrapy.selector.Selector(response)
@@ -73,6 +80,7 @@ class UrlSpider(scrapy.Spider):
     def parse_url(self,response):
         urlItem = response.meta['urlItem']
         urlItem['url'] = response.url           # 重定项后
+        urlItem['baseUrl'] = get_base_url(response)
 
         # readability-lxml
         # doc = Document(response.text)

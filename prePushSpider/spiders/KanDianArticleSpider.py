@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+# 爬取看点文章
+
 import scrapy
 import pandas as pd
 import re
 from prePushSpider.items import KanDianArticleItem
 from prePushSpider.configure import KanDianListFile
+
 
 class KanDianArticleSpider(scrapy.Spider):
     name = "KanDianArticleSpider"
@@ -22,15 +25,16 @@ class KanDianArticleSpider(scrapy.Spider):
             # meta参数是为了能够在request之间进行参数传递，与parse中response.meta对应
             yield scrapy.Request(urls[i],meta={'articleId':articleIds[i]},callback=self.parse)
 
-    def parse(self,response):
+    def parse(self, response):
         sel = scrapy.selector.Selector(response)
         kanDianArticleItem = KanDianArticleItem()
+        kanDianArticleItem['articleId'] = str(response.meta['articleId']).decode('utf-8')
         kanDianArticleItem['url'] = response.url        # 重定向后的url
         try:
             kanDianArticleItem['title'] = sel.xpath('//*[@id="activity-name"]/text()').extract()[0]
             kanDianArticleItem['content'] = sel.xpath('//*[@id="js_content"]').xpath('string(.)').extract()[0]
             kanDianArticleItem['content']= re.sub("[\s+\.\!\/_,\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"),
-                                                  "".decode("utf8"),kanDianArticleItem['content'])
+                                                  "".decode("utf8"), kanDianArticleItem['content'])
         except:
             kanDianArticleItem['title'] = u'deleted'    # 文章被删除了的情况
             kanDianArticleItem['date'] = u''
@@ -45,5 +49,4 @@ class KanDianArticleSpider(scrapy.Spider):
                 # 看点文章url中两种日期和作者结构
                 kanDianArticleItem['date'] = sel.xpath('//div[@class="rich_media_meta_list account clearfix"]/em[2]/text()').extract()[0]
                 kanDianArticleItem['author'] = sel.xpath('//div[@class="rich_media_meta_list account clearfix"]/em[3]/text()').extract()[0]
-        kanDianArticleItem['articleId'] = str(response.meta['articleId']).decode('utf-8')
         yield kanDianArticleItem

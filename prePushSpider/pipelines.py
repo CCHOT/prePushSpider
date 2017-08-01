@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 
 # Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
+
 
 import json
 import codecs
 import datetime
 import Levenshtein
-from prePushSpider.configure import KanDianItemFile,site_set,site_filter_flag,site_file
+from prePushSpider.configure import KanDianItemFile, site_set, site_filter_flag, site_file, threshold
 
-#解决datetime json无法序列化问题
+
+# 解决datetime json序列化问题
 class CJsonEncoder(json.JSONEncoder):
+
     def default(self, obj):
         if isinstance(obj, datetime.datetime):
             return obj.strftime('%Y年%m月%d日 %H:%M:%S')
@@ -28,8 +28,7 @@ class UrlItemPipeline(object):
         jsonfile = codecs.open('downloadArticle/%s.json'%item['articleId'],'a',encoding ='utf-8')
         line = json.dumps(dict(item),cls=CJsonEncoder)+ '\n'
         line = line.decode("unicode_escape")
-        #jsonfile.write(line.encode('latin-1').decode('unicode_escape'))       #python3
-        jsonfile.write(line)      #python2
+        jsonfile.write(line)
         jsonfile.close()
         return item
 
@@ -45,7 +44,7 @@ class UrlItemPipeline(object):
                 if not self.urlFilter(dContent['baseUrl']):
                     continue
                 score = Levenshtein.jaro(sContent,dContent['content'])
-                if score < 0.5:
+                if score < threshold:
                     continue
                 line = json.dumps({'url': dContent['url'],
                                    'score': score})+'\n'

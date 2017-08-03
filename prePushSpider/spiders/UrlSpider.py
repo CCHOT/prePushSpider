@@ -44,8 +44,10 @@ class UrlSpider(scrapy.Spider):
             urlItem = UrlItem()
             urlItem['keyword'] = response.meta['keyword']
             urlItem['articleId'] = response.meta['articleId']
-            urlItem['desc'] = re.sub("[\s+\.\!\/_,\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"), "".decode("utf8"),
-                                     result.xpath('.//div[@class="c-abstract"]').xpath('string(.)').extract()[0])
+            abstracts = result.xpath('.//div[@class="c-abstract"]').xpath('string(.)').extract()
+            if not abstracts:
+                continue
+            urlItem['desc'] = re.sub("[\s+\.\!\/_,\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"), "".decode("utf8"),abstracts[0])
             # 过滤部分标点
             urlItem['url'] = result.xpath('.//div[@class="f13"]/a/@href').extract()[0]
             # 通过百度搜索页面摘要获取日期
@@ -63,12 +65,10 @@ class UrlSpider(scrapy.Spider):
             yield scrapy.Request(urlItem['url'], meta={'urlItem': urlItem}, callback=self.parse_url)
 
         if page < max_page-1:
-            try:
-                nextUrl = sel.xpath(u'//a[contains(.,"下一页")]').xpath(u'./@href').extract()[0]
-                yield scrapy.Request(response.urljoin(nextUrl), callback=self.parse,
+            nextUrl = sel.xpath(u'//a[contains(.,"下一页")]').xpath(u'./@href').extract()
+            for i in nextUrl:
+                yield scrapy.Request(response.urljoin(i), callback=self.parse,
                                      meta={'page': page+1,'articleId':urlItem['articleId'],'keyword':urlItem['keyword']})
-            except:
-                pass
 
     def parse_url(self,response):
         urlItem = response.meta['urlItem']

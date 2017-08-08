@@ -19,12 +19,13 @@ class UrlSpider(scrapy.Spider):
     }   # 指定urlItem 处理pipeline
 
     def start_requests(self):
+        print("start UrlSpider")
         baseUrl = "http://www.baidu.com/s?"
         for line in open(KanDianItemFile):
             article = json.loads(line)
             if article['title'] == u'deleted':
                 continue
-            if site_search_flag:
+            if site_search_flag:                                                    # 是否使用百度高级搜索
                 keyword = baseUrl+'q1=%s'%article['title']                          # 构建baidu搜索url，添加搜索关键字
                 for i in site_set:
                     queryUrl = keyword+'&q6='+i
@@ -47,14 +48,14 @@ class UrlSpider(scrapy.Spider):
             abstracts = result.xpath('.//div[@class="c-abstract"]').xpath('string(.)').extract()
             if not abstracts:
                 continue
-            urlItem['desc'] = re.sub("[\s+\.\!\/_,\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"), "".decode("utf8"),abstracts[0])
+            urlItem['desc'] = re.sub("[\s+\.\!\/_,\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+", "",abstracts[0])
             # 过滤部分标点
             urlItem['url'] = result.xpath('.//div[@class="f13"]/a/@href').extract()[0]
             # 通过百度搜索页面摘要获取日期
             urlItem['date'] = []
-            tt = re.findall(u'^[1-n]+(?:天|小时|分钟)[前内]', urlItem['desc'])
+            tt = re.findall('^[1-n]+(?:天|小时|分钟)[前内]', urlItem['desc'])
             for i in tt:
-                sub = re.findall(u'(^[1-n])+天前', i)
+                sub = re.findall('(^[1-n])+天前', i)
                 if not sub:     # 今天的日期
                     urlItem['date'].append(datetime.date.today())
                 for j in sub:   # 以前的日期
@@ -76,13 +77,11 @@ class UrlSpider(scrapy.Spider):
         urlItem['baseUrl'] = get_base_url(response)
 
         # newspaper
-        article = Article(url='', language='zh')
+        article = Article(url='', language='zh',fetch_images=False)
         article.set_html(response.text)
         article.parse()
-        urlItem['title'] = re.sub("[\s+\.\!\/_,\\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"),
-                                  "".decode("utf8"), article.title)
-        urlItem['content'] = re.sub("[\s+\.\!\/_,\\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+".decode("utf8"),
-                                    "".decode("utf8"), article.text)
+        urlItem['title'] = re.sub("[\s+\.\!\/_,\\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+","", article.title)
+        urlItem['content'] = re.sub("[\s+\.\!\/_,\\\\\$%^*(+\"\']+|[+——！，。？?、~@#￥%……&*（）\n]+","", article.text)
         urlItem['author'] = article.authors         # 基本提取不到
         yield urlItem
 

@@ -6,9 +6,11 @@
 import json
 import codecs
 import datetime
+import time
+import os
 import Levenshtein
-from prePushSpider.configure import KanDianItemFile, site_set, site_filter_flag, site_file, threshold
-
+from prePushSpider.configure import KanDianItemFile, site_set, site_filter_flag, site_file, threshold,DownloadDir,ScoreDir
+from rss_crawler.MysqlConfig import mysql_cfg
 
 # 解决datetime json序列化问题
 class CJsonEncoder(json.JSONEncoder):
@@ -25,33 +27,42 @@ class CJsonEncoder(json.JSONEncoder):
 class UrlItemPipeline(object):
 
     def process_item(self, item, spider):
-        jsonfile = codecs.open('downloadArticle/%s.json'%item['articleId'],'a',encoding ='utf-8')
+        f = codecs.open(DownloadDir+'/%s.json'%item['articleId'],'a',encoding ='utf-8')
         line = json.dumps(dict(item),cls=CJsonEncoder)+ '\n'
-        line = line.decode("unicode_escape")
-        jsonfile.write(line)
-        jsonfile.close()
+        f.write(line)
+        f.close()
         return item
 
-    def close_spider(self,spider):
+    def close_spider(self, spider):
+        print("crawl finish,start analyze")
+        db = mysql_cfg.get_cfg_db_conn()
+        f = open(ScoreDir+time.strftime('/score_%Y_%m_%d_%H_%M_%S.txt',time.localtime()),'w')
+        print("save log"+ScoreDir+time.strftime('/score_%Y_%m_%d_%H_%M_%S.txt',time.localtime()))
         for i in open(KanDianItemFile):
             article = json.loads(i)
             if article['title'] == u'deleted':
                 continue
             sContent = article['content']
-            f = codecs.open('score/%s.json'%article['articleId'],'a',encoding = 'utf-8')
-            for j in open('downloadArticle/%s.json'%article['articleId']):
+            for j in open(DownloadDir+'/%s.json'%article['articleId']):
                 dContent = json.loads(j)
                 if not self.urlFilter(dContent['baseUrl']):
                     continue
-                score = Levenshtein.jaro(sContent,dContent['content'])
+                score = Levenshtein.jaro(sContent, dContent['content'])
                 if score < threshold:
                     continue
-                line = json.dumps({'url': dContent['url'],
-                                   'score': score})+'\n'
+                db.insertOrUpdate(table="PrePushArticleSource", data={'ArticleID': article['articleId'],
+                                                                      'SourceUrl': dContent['url'],
+                                                                      'Similarity': score, },
+                                  keys=['ArticleID'])
+                line = "%s %s %s\n"% (article['articleId'],dContent['url'],score)
                 f.write(line)
-            f.close()
+        f.close()
+        db.commit()
+        mysql_cfg.disconnect_db(db)
+        self.deleteFiles()
+        print("analyze finish")
 
-    def urlFilter(self,url):
+    def urlFilter(self, url):
         if site_filter_flag:
             for site in site_set:
                 if url.find(site) != -1:
@@ -60,15 +71,19 @@ class UrlItemPipeline(object):
         else:
             return True
 
+    
+    def deleteFiles(self):
+        filelist = os.listdir(DownloadDir)
+        for f in filelist:
+            os.remove(DownloadDir+'/'+f)
 
 class KanDianArticleItemPipeline(object):
     # 看点文章item处理，保存到json
     def __init__(self):
-        self.file = codecs.open('KanDianArticle.json','wb',encoding='utf-8')
+        self.file = codecs.open(KanDianItemFile,'wb',encoding='utf-8')
 
     def process_item(self,item,spider):
         line = json.dumps(dict(item)) + '\n'
-        line = line.decode("unicode_escape")
         self.file.write(line)
         return item
 
@@ -83,11 +98,10 @@ class MediaItemPipeline(object):
 
     def process_item(self,item,spider):
         line = json.dumps(dict(item)) + '\n'
-        line = line.decode("unicode_escape")
         self.file.write(line)
         self.count += 1
         return item
 
     def close_spider(self,spider):
         self.file.close()
-        print '爬取'+ str(self.count)+'个网址'
+        print('爬取'+ str(self.count)+'个网址')

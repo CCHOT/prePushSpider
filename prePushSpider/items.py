@@ -6,7 +6,6 @@
 
 import scrapy
 
-
 class UrlItem(scrapy.Item):
     articleId = scrapy.Field()      # cms中文章id
     keyword = scrapy.Field()        # 搜索关键字

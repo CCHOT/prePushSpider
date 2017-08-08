@@ -1,5 +1,5 @@
 # prePushSpider
-KanDian filter
+KanDian source score
 
 # 一些说明：
 
@@ -18,11 +18,15 @@ KanDian filter
         'allow_redirects': True,
         'proxies': {'http':'dev-proxy.oa.com:8080'}
     }`
+线上环境经测试不需要配置代理
 
 
 3.如需不下载图片，可进行配置configuration.py
 
     `self.fetch_images = False`
+或者通过传递参数的方式。
+
+    `article = Article(url='', language='zh',fetch_images=False)`
     
 
 ### 日期提取策略

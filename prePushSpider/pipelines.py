@@ -52,8 +52,7 @@ class UrlItemPipeline(object):
                     continue
                 db.insertOrUpdate(table="PrePushArticleSource", data={'ArticleID': article['articleId'],
                                                                       'SourceUrl': dContent['url'],
-                                                                      'Similarity': score, },
-                                  keys=['ArticleID'])
+                                                                      'Similarity': score, })
                 line = "%s %s %s\n"% (article['articleId'],dContent['url'],score)
                 f.write(line)
         f.close()

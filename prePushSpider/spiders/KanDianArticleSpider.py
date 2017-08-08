@@ -17,7 +17,7 @@ class KanDianArticleSpider(scrapy.Spider):
     }           # 指定该spider返回item处理的pipeline
 
     def start_requests(self):
-        print("start crawl KanDianArticleSpider\n")
+        print("start crawl KanDianArticleSpider")
         file = open(KanDianListFile)
         try:
             articleList = [article.rstrip('\n') for article in file]
